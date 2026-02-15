@@ -1,0 +1,50 @@
+# {{.ProjectName}}
+
+{{.Description}}
+
+## Getting Started
+
+### Prerequisites
+
+- Go {{.GoVersion}} or higher
+
+### Installation
+
+```bash
+# Clone the repository
+git clone {{.Module}}
+cd {{.ProjectName}}
+
+# Install dependencies
+go mod download
+```
+
+### Running
+
+```bash
+go run main.go
+```
+
+The server will start on `http://localhost:8080`
+
+## API Endpoints
+
+- `GET /health` - Health check
+- `GET /api/v1/hello` - Hello endpoint
+
+## Building
+
+```bash
+go build -o {{.ProjectName}} main.go
+./{{.ProjectName}}
+```
+
+## Testing
+
+```bash
+go test -v ./...
+```
+
+## License
+
+MIT

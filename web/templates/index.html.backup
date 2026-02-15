@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Initializr</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        /* Custom styles for radio buttons to match Spring Initializr */
+        .radio-group input[type="radio"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .radio-group input[type="radio"]:checked {
+            border-color: #10b981;
+        }
+        .radio-group input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Structure card radios */
+        input[type="radio"][name="structure"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        input[type="radio"][name="structure"]:checked {
+            border-color: #10b981;
+        }
+        input[type="radio"][name="structure"]:checked::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        input[type="radio"][name="structure"]:checked ~ div {
+            /* Could add visual feedback to the selected card */
+        }
+        label:has(input[type="radio"][name="structure"]:checked) {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+        
+        .dependency-pill {
+            transition: all 0.2s;
+        }
+        .dependency-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <button class="lg:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <div class="flex items-center ml-4 lg:ml-0">
+                        <svg class="w-10 h-10 text-cyan-500" viewBox="0 0 207 207" fill="currentColor">
+                            <path d="M15.81 138.65c0 11.88 9.63 21.51 21.51 21.51h63.56v-43.03H37.32c-11.88 0-21.51 9.63-21.51 21.52zm74.89-43.03h-.33v-43.03c0-11.88-9.63-21.51-21.51-21.51H15.81c0 11.88 9.63 21.51 21.51 21.51h53.38z"/>
+                            <path d="M154.71 95.62h-63.9v43.03h63.9c11.88 0 21.51-9.63 21.51-21.51 0-11.89-9.63-21.52-21.51-21.52zm0-64.54c-11.88 0-21.51 9.63-21.51 21.51v.33h-.33v43.03h21.84c11.88 0 21.51-9.63 21.51-21.51V31.08z"/>
+                        </svg>
+                        <h1 class="ml-3 text-2xl font-semibold text-gray-900">go initializr</h1>
+                    </div>
+                </div>
+                <!-- Theme Toggle -->
+                <div class="flex items-center space-x-2">
+                    <button class="p-2 rounded-lg border border-gray-300 hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Configuration -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Project Type -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Project</h2>
+                    <div class="radio-group flex flex-wrap gap-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project" value="go-modules" checked class="mr-2">
+                            <span class="text-gray-700">Go Modules</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project" value="makefile" class="mr-2">
+                            <span class="text-gray-700">Makefile</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Language & Version -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Language</h2>
+                    <div class="radio-group flex flex-wrap gap-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="language" value="go" checked class="mr-2">
+                            <span class="text-gray-700">Go</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Go Version -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Go Version</h2>
+                    <div class="radio-group grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="go-version" value="1.23" class="mr-2">
+                            <span class="text-gray-700">1.23</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="go-version" value="1.22" checked class="mr-2">
+                            <span class="text-gray-700">1.22</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="go-version" value="1.21" class="mr-2">
+                            <span class="text-gray-700">1.21</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="go-version" value="1.20" class="mr-2">
+                            <span class="text-gray-700">1.20</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Project Metadata -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-6">Project Metadata</h2>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 text-right sm:text-left sm:pr-4">
+                                    Module
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value="github.com/example" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 text-right sm:text-left sm:pr-4">
+                                    Name
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value="demo" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                                >
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 text-right sm:text-left">
+                                Description
+                            </label>
+                            <input 
+                                type="text" 
+                                value="Demo project for Go" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                            >
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Project Type -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Project Type</h2>
+                    <div class="radio-group flex flex-wrap gap-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project-type" value="rest-api" checked class="mr-2">
+                            <span class="text-gray-700">REST API</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project-type" value="grpc" class="mr-2">
+                            <span class="text-gray-700">gRPC Service</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project-type" value="cli" class="mr-2">
+                            <span class="text-gray-700">CLI Tool</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="project-type" value="library" class="mr-2">
+                            <span class="text-gray-700">Library</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Project Structure -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Project Structure</h2>
+                    <div class="space-y-4">
+                        <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-all">
+                            <input type="radio" name="structure" value="standard" checked class="mt-1 mr-3">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-900">Standard Layout</div>
+                                <div class="text-sm text-gray-600 mt-1">Recommended for most projects. Uses cmd/, internal/, pkg/ structure.</div>
+                                <div class="text-xs text-gray-500 mt-2 font-mono">cmd/ internal/ pkg/ api/ configs/</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-all">
+                            <input type="radio" name="structure" value="feature" class="mt-1 mr-3">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-900">Feature-Based</div>
+                                <div class="text-sm text-gray-600 mt-1">Organize by business domain/feature. Good for medium-sized apps.</div>
+                                <div class="text-xs text-gray-500 mt-2 font-mono">internal/user/ internal/product/ internal/order/</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-all">
+                            <input type="radio" name="structure" value="flat" class="mt-1 mr-3">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-900">Simple/Flat</div>
+                                <div class="text-sm text-gray-600 mt-1">All code in root directory. Best for small projects and CLIs.</div>
+                                <div class="text-xs text-gray-500 mt-2 font-mono">main.go handler.go service.go model.go</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-all">
+                            <input type="radio" name="structure" value="hexagonal" class="mt-1 mr-3">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-900">Hexagonal/Clean Architecture</div>
+                                <div class="text-sm text-gray-600 mt-1">Domain-driven design with strict layer separation. For complex apps.</div>
+                                <div class="text-xs text-gray-500 mt-2 font-mono">domain/ adapters/ infrastructure/</div>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Additional Options -->
+                <section class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Additional Options</h2>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                            <span class="ml-3 text-gray-700">Include Docker configuration</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500" checked>
+                            <span class="ml-3 text-gray-700">Include GitHub Actions CI/CD</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500" checked>
+                            <span class="ml-3 text-gray-700">Include test examples</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                            <span class="ml-3 text-gray-700">Include air (hot reload)</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Generate Button -->
+                <div class="flex justify-between items-center">
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        EXPLORE
+                    </button>
+                    <button class="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold shadow-lg">
+                        GENERATE
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column - Dependencies -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm p-6 sticky top-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">Dependencies</h2>
+                        <button class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            ADD DEPENDENCIES... <kbd class="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">CTRL + B</kbd>
+                        </button>
+                    </div>
+
+                    <!-- Selected Dependencies -->
+                    <div class="space-y-3" x-data="{ dependencies: ['Chi Router', 'PostgreSQL Driver', 'Zerolog'] }">
+                        <!-- Dependency Item -->
+                        <div class="dependency-pill border border-gray-200 rounded-lg p-4 hover:border-cyan-500 cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-900">Chi Router</h3>
+                                        <span class="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full font-medium">WEB</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Lightweight, idiomatic HTTP router for building Go HTTP services</p>
+                                </div>
+                                <button class="ml-2 text-gray-400 hover:text-red-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dependency-pill border border-gray-200 rounded-lg p-4 hover:border-cyan-500 cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-900">PostgreSQL Driver</h3>
+                                        <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">DATABASE</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Pure Go Postgres driver for database/sql</p>
+                                </div>
+                                <button class="ml-2 text-gray-400 hover:text-red-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dependency-pill border border-gray-200 rounded-lg p-4 hover:border-cyan-500 cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="font-semibold text-gray-900">Zerolog</h3>
+                                        <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">LOGGING</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Zero allocation JSON logger</p>
+                                </div>
+                                <button class="ml-2 text-gray-400 hover:text-red-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <template x-if="dependencies.length === 0">
+                            <div class="text-center py-8 text-gray-500">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                </svg>
+                                <p class="text-sm">No dependencies selected</p>
+                                <p class="text-xs mt-1">Click "Add Dependencies" to get started</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dependency Drawer (Hidden by default) -->
+    <div id="dependency-drawer" class="hidden fixed inset-0 z-50">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeDrawer()"></div>
+        
+        <!-- Drawer -->
+        <div class="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl flex flex-col transform transition-transform duration-300">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-xl font-semibold text-gray-900">Add Dependencies</h3>
+                <button onclick="closeDrawer()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <input 
+                    type="text" 
+                    id="dependency-search"
+                    placeholder="Search dependencies..." 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    oninput="filterDependencies(this.value)"
+                >
+            </div>
+
+            <!-- Content Area with Sidebar -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Category Sidebar -->
+                <div class="w-64 border-r border-gray-200 overflow-y-auto bg-gray-50">
+                    <nav class="p-2">
+                        <button onclick="showCategory('web')" data-category="web" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1 bg-white shadow-sm">
+                            <div class="font-medium text-gray-900">Web</div>
+                            <div class="text-xs text-gray-500 mt-0.5">HTTP routers & frameworks</div>
+                        </button>
+                        <button onclick="showCategory('template')" data-category="template" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Template</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Template engines</div>
+                        </button>
+                        <button onclick="showCategory('rdbms')" data-category="rdbms" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">RDBMS</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Relational databases</div>
+                        </button>
+                        <button onclick="showCategory('nosql')" data-category="nosql" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">NoSQL</div>
+                            <div class="text-xs text-gray-500 mt-0.5">MongoDB, Redis, etc.</div>
+                        </button>
+                        <button onclick="showCategory('logging')" data-category="logging" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Logging</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Structured logging</div>
+                        </button>
+                        <button onclick="showCategory('observability')" data-category="observability" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Observability</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Metrics & tracing</div>
+                        </button>
+                        <button onclick="showCategory('messaging')" data-category="messaging" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Messaging</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Message queues</div>
+                        </button>
+                        <button onclick="showCategory('streams')" data-category="streams" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Streams</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Kafka, NATS, etc.</div>
+                        </button>
+                        <button onclick="showCategory('websocket')" data-category="websocket" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">WebSocket</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Real-time communication</div>
+                        </button>
+                        <button onclick="showCategory('security')" data-category="security" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Security</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Auth & encryption</div>
+                        </button>
+                        <button onclick="showCategory('testing')" data-category="testing" class="category-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors mb-1">
+                            <div class="font-medium text-gray-900">Testing</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Test frameworks & mocks</div>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Dependencies List -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <!-- Web Category -->
+                    <div id="category-web" class="category-content">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Web</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Chi Router</div>
+                                    <div class="text-sm text-gray-600 mt-1">Lightweight, idiomatic HTTP router for building Go HTTP services</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/go-chi/chi/v5</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Gin Web Framework</div>
+                                    <div class="text-sm text-gray-600 mt-1">HTTP web framework with performance and productivity</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/gin-gonic/gin</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Echo</div>
+                                    <div class="text-sm text-gray-600 mt-1">High performance, minimalist Go web framework</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/labstack/echo/v4</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Fiber</div>
+                                    <div class="text-sm text-gray-600 mt-1">Express-inspired web framework built on Fasthttp</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/gofiber/fiber/v2</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Gorilla Mux</div>
+                                    <div class="text-sm text-gray-600 mt-1">Powerful HTTP router and URL matcher</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/gorilla/mux</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Template Category -->
+                    <div id="category-template" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Template</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Templ</div>
+                                    <div class="text-sm text-gray-600 mt-1">Type-safe HTML templating language for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/a-h/templ</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">html/template</div>
+                                    <div class="text-sm text-gray-600 mt-1">Standard library HTML template engine</div>
+                                    <div class="text-xs text-gray-500 mt-2">html/template (stdlib)</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Pongo2</div>
+                                    <div class="text-sm text-gray-600 mt-1">Django-syntax like template engine</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/flosch/pongo2/v6</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- RDBMS Category -->
+                    <div id="category-rdbms" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">RDBMS</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">PostgreSQL Driver (pgx)</div>
+                                    <div class="text-sm text-gray-600 mt-1">Pure Go PostgreSQL driver and toolkit</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/jackc/pgx/v5</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">MySQL Driver</div>
+                                    <div class="text-sm text-gray-600 mt-1">Go MySQL driver for database/sql</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/go-sql-driver/mysql</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">GORM</div>
+                                    <div class="text-sm text-gray-600 mt-1">Full-featured ORM library for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">gorm.io/gorm</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">sqlx</div>
+                                    <div class="text-sm text-gray-600 mt-1">Extensions to database/sql for easier querying</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/jmoiron/sqlx</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">SQLite Driver</div>
+                                    <div class="text-sm text-gray-600 mt-1">Pure Go SQLite driver</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/mattn/go-sqlite3</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- NoSQL Category -->
+                    <div id="category-nosql" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">NoSQL</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Redis Client (go-redis)</div>
+                                    <div class="text-sm text-gray-600 mt-1">Type-safe Redis client for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/redis/go-redis/v9</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">MongoDB Driver</div>
+                                    <div class="text-sm text-gray-600 mt-1">Official MongoDB driver for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">go.mongodb.org/mongo-driver</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">BadgerDB</div>
+                                    <div class="text-sm text-gray-600 mt-1">Fast key-value DB written in pure Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/dgraph-io/badger/v4</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Logging Category -->
+                    <div id="category-logging" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Logging</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Zerolog</div>
+                                    <div class="text-sm text-gray-600 mt-1">Zero allocation JSON logger</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/rs/zerolog</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Zap</div>
+                                    <div class="text-sm text-gray-600 mt-1">Blazing fast, structured, leveled logging</div>
+                                    <div class="text-xs text-gray-500 mt-2">go.uber.org/zap</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Logrus</div>
+                                    <div class="text-sm text-gray-600 mt-1">Structured logger for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/sirupsen/logrus</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">slog</div>
+                                    <div class="text-sm text-gray-600 mt-1">Standard library structured logging (Go 1.21+)</div>
+                                    <div class="text-xs text-gray-500 mt-2">log/slog (stdlib)</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Observability Category -->
+                    <div id="category-observability" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Observability</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Prometheus Client</div>
+                                    <div class="text-sm text-gray-600 mt-1">Prometheus instrumentation library</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/prometheus/client_golang</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">OpenTelemetry</div>
+                                    <div class="text-sm text-gray-600 mt-1">Observability framework for traces, metrics, and logs</div>
+                                    <div class="text-xs text-gray-500 mt-2">go.opentelemetry.io/otel</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Jaeger Client</div>
+                                    <div class="text-sm text-gray-600 mt-1">Distributed tracing system</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/jaegertracing/jaeger-client-go</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Messaging Category -->
+                    <div id="category-messaging" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Messaging</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">RabbitMQ Client</div>
+                                    <div class="text-sm text-gray-600 mt-1">AMQP 0.9.1 client for RabbitMQ</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/rabbitmq/amqp091-go</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">AWS SQS SDK</div>
+                                    <div class="text-sm text-gray-600 mt-1">Amazon Simple Queue Service client</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/aws/aws-sdk-go-v2/service/sqs</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Streams Category -->
+                    <div id="category-streams" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Streams</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Kafka Client (Sarama)</div>
+                                    <div class="text-sm text-gray-600 mt-1">Pure Go client library for Apache Kafka</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/IBM/sarama</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">NATS</div>
+                                    <div class="text-sm text-gray-600 mt-1">Cloud native messaging system</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/nats-io/nats.go</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Pulsar Client</div>
+                                    <div class="text-sm text-gray-600 mt-1">Apache Pulsar Go client library</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/apache/pulsar-client-go</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- WebSocket Category -->
+                    <div id="category-websocket" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">WebSocket</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Gorilla WebSocket</div>
+                                    <div class="text-sm text-gray-600 mt-1">Fast, well-tested WebSocket implementation</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/gorilla/websocket</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">nhooyr.io/websocket</div>
+                                    <div class="text-sm text-gray-600 mt-1">Minimal and idiomatic WebSocket library</div>
+                                    <div class="text-xs text-gray-500 mt-2">nhooyr.io/websocket</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Security Category -->
+                    <div id="category-security" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Security</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">JWT-Go</div>
+                                    <div class="text-sm text-gray-600 mt-1">JSON Web Token implementation</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/golang-jwt/jwt/v5</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Bcrypt</div>
+                                    <div class="text-sm text-gray-600 mt-1">Password hashing using bcrypt algorithm</div>
+                                    <div class="text-xs text-gray-500 mt-2">golang.org/x/crypto/bcrypt</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Casbin</div>
+                                    <div class="text-sm text-gray-600 mt-1">Authorization library supporting ACL, RBAC, ABAC</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/casbin/casbin/v2</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Testing Category -->
+                    <div id="category-testing" class="category-content hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white pb-2">Testing</h4>
+                        <div class="space-y-2">
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Testify</div>
+                                    <div class="text-sm text-gray-600 mt-1">Testing toolkit with assertions and mocking</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/stretchr/testify</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">GoMock</div>
+                                    <div class="text-sm text-gray-600 mt-1">Mocking framework for Go</div>
+                                    <div class="text-xs text-gray-500 mt-2">go.uber.org/mock</div>
+                                </div>
+                            </label>
+                            <label class="dependency-item flex items-start p-4 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 cursor-pointer transition-all">
+                                <input type="checkbox" class="mt-1 w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500">
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-900">Ginkgo</div>
+                                    <div class="text-sm text-gray-600 mt-1">BDD-style testing framework</div>
+                                    <div class="text-xs text-gray-500 mt-2">github.com/onsi/ginkgo/v2</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    <span id="selected-count">0</span> dependencies selected
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="closeDrawer()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="addSelectedDependencies()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold">
+                        Add Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show drawer when clicking Add Dependencies
+        document.querySelector('.sticky button').addEventListener('click', function() {
+            openDrawer();
+        });
+
+        function openDrawer() {
+            const drawer = document.getElementById('dependency-drawer');
+            drawer.classList.remove('hidden');
+            // Trigger reflow for animation
+            setTimeout(() => {
+                drawer.querySelector('.absolute.right-0').classList.add('translate-x-0');
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const drawer = document.getElementById('dependency-drawer');
+            drawer.querySelector('.absolute.right-0').classList.remove('translate-x-0');
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 300);
+        }
+
+        function showCategory(category) {
+            // Hide all category contents
+            document.querySelectorAll('.category-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active state from all buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm');
+            });
+            
+            // Show selected category
+            document.getElementById('category-' + category).classList.remove('hidden');
+            
+            // Add active state to clicked button
+            const activeBtn = document.querySelector(`[data-category="${category}"]`);
+            activeBtn.classList.add('bg-white', 'shadow-sm');
+        }
+
+        function filterDependencies(query) {
+            const searchTerm = query.toLowerCase();
+            document.querySelectorAll('.dependency-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.dependency-item input[type="checkbox"]:checked').length;
+            document.getElementById('selected-count').textContent = count;
+        }
+
+        function addSelectedDependencies() {
+            // This would add the selected dependencies to the main panel
+            // For now, just close the drawer
+            updateSelectedCount();
+            closeDrawer();
+        }
+
+        // Update count when checkboxes change
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox' && e.target.closest('.dependency-item')) {
+                updateSelectedCount();
+            }
+        });
+
+        // Close drawer on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDrawer();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"{{.Module}}/internal/user"
+	"{{.Module}}/pkg/config"
+{{if .UseLogger}}
+	"{{.Module}}/pkg/logger"
+{{end}}
+{{if eq .Router "chi"}}
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+{{else if eq .Router "gin"}}
+	"github.com/gin-gonic/gin"
+{{else if eq .Router "echo"}}
+	"github.com/labstack/echo/v4"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
+{{end}}
+)
+
+func main() {
+{{if .UseLogger}}
+	log := logger.New()
+	log.Info("Starting {{.ProjectName}}...")
+{{else}}
+	log.Println("Starting {{.ProjectName}}...")
+{{end}}
+
+	cfg := config.Load()
+
+{{if eq .Router "chi"}}
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	
+	// Mount user routes
+	r.Mount("/api/v1/users", user.NewHandler().Routes())
+	
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
+	}
+{{else if eq .Router "gin"}}
+	r := gin.Default()
+	
+	// Register user routes
+	userHandler := user.NewHandler()
+	api := r.Group("/api/v1")
+	{
+		users := api.Group("/users")
+		userHandler.RegisterRoutes(users)
+	}
+	
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
+	}
+{{else if eq .Router "echo"}}
+	e := echo.New()
+	e.Use(echomiddleware.Logger())
+	e.Use(echomiddleware.Recover())
+	
+	// Register user routes
+	userHandler := user.NewHandler()
+	api := e.Group("/api/v1")
+	userHandler.RegisterRoutes(api.Group("/users"))
+	
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: e,
+	}
+{{else}}
+	mux := http.NewServeMux()
+	
+	// Register user routes
+	userHandler := user.NewHandler()
+	userHandler.RegisterRoutes(mux)
+	
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: mux,
+	}
+{{end}}
+
+{{if .UseLogger}}
+	log.Info("Server starting", "port", cfg.Port)
+{{else}}
+	log.Printf("Server starting on :%s\n", cfg.Port)
+{{end}}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Server failed:", err)
+		}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+{{if .UseLogger}}
+	log.Info("Shutting down server...")
+{{else}}
+	log.Println("Shutting down server...")
+{{end}}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+{{if .UseLogger}}
+	log.Info("Server exited")
+{{else}}
+	log.Println("Server exited")
+{{end}}
+}

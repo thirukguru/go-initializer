@@ -1,0 +1,121 @@
+# {{.ProjectName}}
+
+{{.Description}}
+
+## Project Structure
+
+```
+{{.ProjectName}}/
+├── cmd/
+│   └── {{.ProjectName}}/
+│       └── main.go          # Application entry point
+├── internal/
+│   ├── handler/             # HTTP handlers
+│   ├── service/             # Business logic
+│   ├── repository/          # Data access layer
+│   ├── model/               # Data models
+│   ├── middleware/          # HTTP middleware
+│   └── config/              # Configuration
+├── pkg/
+│   └── logger/              # Logging utilities
+├── api/
+│   └── openapi.yaml         # API specification
+├── configs/
+│   └── config.yaml          # Configuration files
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # CI/CD pipeline
+├── Dockerfile
+├── docker-compose.yaml
+├── Makefile
+├── .env.example
+├── .gitignore
+├── go.mod
+├── go.sum
+└── README.md
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Go {{.GoVersion}} or higher
+- Docker (optional)
+{{if .UseDatabase}}
+- PostgreSQL (or your preferred database)
+{{end}}
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone {{.Module}}
+cd {{.ProjectName}}
+```
+
+2. Install dependencies:
+```bash
+go mod download
+```
+
+3. Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+4. Update the `.env` file with your configuration
+
+### Running the Application
+
+#### Using Go
+
+```bash
+go run cmd/{{.ProjectName}}/main.go
+```
+
+#### Using Make
+
+```bash
+make run
+```
+
+#### Using Docker
+
+```bash
+docker-compose up
+```
+
+The server will start on `http://localhost:8080`
+
+## API Endpoints
+
+- `GET /health` - Health check endpoint
+- `GET /api/v1/hello` - Hello endpoint
+
+## Development
+
+### Running Tests
+
+```bash
+make test
+```
+
+### Building
+
+```bash
+make build
+```
+
+### Linting
+
+```bash
+make lint
+```
+
+## Configuration
+
+The application can be configured using environment variables. See `.env.example` for available options.
+
+## License
+
+This project is licensed under the MIT License.

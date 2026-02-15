@@ -1,0 +1,80 @@
+package config
+
+import (
+	"os"
+	"strconv"
+)
+
+type Config struct {
+	Server   ServerConfig
+	Database DatabaseConfig
+{{if .UseLogger}}
+	Log      LogConfig
+{{end}}
+}
+
+type ServerConfig struct {
+	Port         string
+	Environment  string
+	ReadTimeout  int
+	WriteTimeout int
+}
+
+type DatabaseConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DBName   string
+	SSLMode  string
+}
+
+{{if .UseLogger}}
+type LogConfig struct {
+	Level  string
+	Format string
+}
+{{end}}
+
+// Load loads the application configuration from environment variables
+func Load() (*Config, error) {
+	cfg := &Config{
+		Server: ServerConfig{
+			Port:         getEnv("PORT", "8080"),
+			Environment:  getEnv("ENVIRONMENT", "development"),
+			ReadTimeout:  getEnvAsInt("READ_TIMEOUT", 15),
+			WriteTimeout: getEnvAsInt("WRITE_TIMEOUT", 15),
+		},
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnv("DB_PORT", "5432"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", ""),
+			DBName:   getEnv("DB_NAME", "{{.ProjectName}}"),
+			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		},
+{{if .UseLogger}}
+		Log: LogConfig{
+			Level:  getEnv("LOG_LEVEL", "info"),
+			Format: getEnv("LOG_FORMAT", "json"),
+		},
+{{end}}
+	}
+
+	return cfg, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvAsInt(key string, defaultValue int) int {
+	valueStr := getEnv(key, "")
+	if value, err := strconv.Atoi(valueStr); err == nil {
+		return value
+	}
+	return defaultValue
+}

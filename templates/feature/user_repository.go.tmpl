@@ -1,0 +1,37 @@
+package user
+
+type Repository struct {
+	// Add database connection here
+}
+
+func NewRepository() *Repository {
+	return &Repository{}
+}
+
+func (r *Repository) FindAll() []User {
+	// TODO: Implement database query
+	return []User{
+		{ID: "1", Name: "John Doe", Email: "john@example.com"},
+		{ID: "2", Name: "Jane Smith", Email: "jane@example.com"},
+	}
+}
+
+func (r *Repository) FindByID(id string) User {
+	// TODO: Implement database query
+	return User{ID: id, Name: "John Doe", Email: "john@example.com"}
+}
+
+func (r *Repository) Create(user User) User {
+	// TODO: Implement database insert
+	user.ID = "new-id"
+	return user
+}
+
+func (r *Repository) Update(user User) User {
+	// TODO: Implement database update
+	return user
+}
+
+func (r *Repository) Delete(id string) {
+	// TODO: Implement database delete
+}

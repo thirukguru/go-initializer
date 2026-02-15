@@ -1,0 +1,285 @@
+# {{.ProjectName}}
+
+{{.Description}}
+
+## Architecture: Hexagonal (Ports & Adapters)
+
+This project follows the Hexagonal Architecture pattern, also known as Ports and Adapters.
+
+### Project Structure
+
+```
+{{.ProjectName}}/
+├── cmd/
+│   └── {{.ProjectName}}/
+│       └── main.go              # Application entry point
+│
+├── internal/
+│   ├── core/                    # CORE: Business logic (domain)
+│   │   ├── domain/              # Domain entities and business rules
+│   │   │   └── user.go          # User entity with validation
+│   │   ├── port/                # Ports (interfaces)
+│   │   │   └── repository.go    # Repository interface
+│   │   └── service/             # Use cases / Application services
+│   │       └── user.go          # User service with business logic
+│   │
+│   ├── adapters/                # ADAPTERS: External world connectors
+│   │   ├── http/                # HTTP adapter (input)
+│   │   │   └── handler/         # HTTP handlers
+│   │   │       └── user.go      # User HTTP endpoints
+│   │   └── repository/          # Data persistence adapter (output)
+│   │       └── user.go          # In-memory user repository
+│   │
+│   └── infrastructure/          # INFRASTRUCTURE: Cross-cutting concerns
+│       ├── config/              # Configuration
+│       │   └── config.go
+│       └── logger/              # Logging
+│           └── logger.go
+│
+├── go.mod
+├── go.sum
+└── README.md
+```
+
+## Hexagonal Architecture Explained
+
+### The Three Layers
+
+#### 1. **Core (Domain Layer)**
+The heart of the application. Contains:
+- **Domain Entities**: Business objects with behavior (`domain/user.go`)
+- **Ports**: Interfaces defining what the domain needs (`port/repository.go`)
+- **Services**: Business logic and use cases (`service/user.go`)
+
+**Rules:**
+- ✅ Core has NO dependencies on external frameworks
+- ✅ Core defines interfaces (ports) for what it needs
+- ✅ All business rules live here
+- ❌ Core never imports from adapters or infrastructure
+
+#### 2. **Adapters Layer**
+Translates between the core and the external world:
+- **Input Adapters** (Driving): HTTP handlers, CLI commands, gRPC servers
+- **Output Adapters** (Driven): Repositories, external APIs, message queues
+
+**Rules:**
+- ✅ Adapters depend on Core (imports from `core/`)
+- ✅ Adapters implement ports defined by Core
+- ✅ Adapters can be swapped without changing Core
+- ❌ Core never depends on adapters
+
+#### 3. **Infrastructure Layer**
+Cross-cutting concerns:
+- Configuration
+- Logging
+- Monitoring
+- Database connections
+
+### Key Benefits
+
+1. **Testability**: Core business logic can be tested without HTTP, database, etc.
+2. **Flexibility**: Swap HTTP for gRPC, PostgreSQL for MongoDB, without changing core
+3. **Independence**: Business logic doesn't depend on frameworks
+4. **Maintainability**: Clear separation of concerns
+
+### Example Flow
+
+```
+HTTP Request
+    ↓
+[HTTP Handler] (Adapter)
+    ↓
+[User Service] (Core - Business Logic)
+    ↓
+[Repository Interface] (Port - Core defines)
+    ↓
+[In-Memory Repository] (Adapter - Implementation)
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Go {{.GoVersion}} or higher
+
+### Installation
+
+```bash
+# Clone the repository
+git clone {{.Module}}
+cd {{.ProjectName}}
+
+# Install dependencies
+go mod download
+```
+
+### Running the Application
+
+```bash
+# Run directly
+go run cmd/{{.ProjectName}}/main.go
+
+# Or build first
+go build -o {{.ProjectName}} cmd/{{.ProjectName}}/main.go
+./{{.ProjectName}}
+```
+
+The server will start on `http://localhost:8080`
+
+## API Endpoints
+
+### Health Check
+```bash
+GET /health
+```
+
+### User Management
+
+#### Create User
+```bash
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "John Doe"
+}
+```
+
+#### Get User
+```bash
+GET /api/v1/users/{id}
+```
+
+#### Update User
+```bash
+PUT /api/v1/users/{id}
+Content-Type: application/json
+
+{
+  "name": "Jane Doe"
+}
+```
+
+#### Delete User
+```bash
+DELETE /api/v1/users/{id}
+```
+
+#### List Users
+```bash
+GET /api/v1/users
+```
+
+## Development
+
+### Running Tests
+
+```bash
+go test ./...
+```
+
+### Project Guidelines
+
+#### Adding a New Feature
+
+1. **Define Domain Entity** (`internal/core/domain/`)
+   - Create entity with business rules
+   - Add validation logic
+
+2. **Define Port** (`internal/core/port/`)
+   - Create interface for what you need (repository, external service, etc.)
+
+3. **Implement Service** (`internal/core/service/`)
+   - Add business logic
+   - Use ports (interfaces) for dependencies
+
+4. **Create Adapters** (`internal/adapters/`)
+   - HTTP handlers for input
+   - Repository implementations for output
+
+5. **Wire it up** (`cmd/{{.ProjectName}}/main.go`)
+   - Initialize adapters
+   - Inject into services
+   - Register routes
+
+#### Dependency Rule
+
+**The Dependency Rule**: Dependencies point INWARD
+```
+Adapters → Core
+Infrastructure → Core
+Core → (nothing)
+```
+
+## Architecture Decisions
+
+### Why In-Memory Repository?
+
+The default implementation uses an in-memory repository for simplicity. In production:
+
+**Replace with PostgreSQL:**
+```go
+// internal/adapters/repository/postgres_user.go
+type PostgresUserRepository struct {
+    db *sql.DB
+}
+
+func NewPostgresUserRepository(db *sql.DB) port.UserRepository {
+    return &PostgresUserRepository{db: db}
+}
+```
+
+**Replace with MongoDB:**
+```go
+// internal/adapters/repository/mongo_user.go
+type MongoUserRepository struct {
+    collection *mongo.Collection
+}
+
+func NewMongoUserRepository(col *mongo.Collection) port.UserRepository {
+    return &MongoUserRepository{collection: col}
+}
+```
+
+The core business logic (`service/user.go`) remains unchanged!
+
+### Why This Structure?
+
+- **Domain-Driven Design**: Business logic is king
+- **SOLID Principles**: Dependency Inversion, Single Responsibility
+- **Clean Architecture**: Framework independence
+- **Testability**: Easy to mock dependencies
+
+## Testing Strategy
+
+### Unit Tests (Core)
+```go
+// internal/core/service/user_test.go
+func TestCreateUser(t *testing.T) {
+    // Use mock repository
+    mockRepo := &MockUserRepository{}
+    service := NewUserService(mockRepo)
+    
+    user, err := service.CreateUser(ctx, "test@example.com", "Test User")
+    // assertions...
+}
+```
+
+### Integration Tests (Adapters)
+```go
+// internal/adapters/http/handler/user_test.go
+func TestUserHandler_Create(t *testing.T) {
+    // Test HTTP handler with real service and mock repo
+}
+```
+
+## Further Reading
+
+- [Hexagonal Architecture by Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
+- [Clean Architecture by Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Domain-Driven Design](https://martinfowler.com/bliki/DomainDrivenDesign.html)
+
+## License
+
+MIT License

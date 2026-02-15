@@ -1,0 +1,40 @@
+package middleware
+
+import (
+	"net/http"
+	"time"
+{{if eq .Router "chi"}}
+	"github.com/go-chi/chi/v5/middleware"
+{{end}}
+{{if .UseLogger}}
+	"{{.Module}}/pkg/logger"
+{{end}}
+)
+
+{{if eq .Router "chi"}}
+{{if .UseLogger}}
+// Logger is a middleware that logs HTTP requests
+func Logger(log *logger.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			
+			defer func() {
+				log.Info("HTTP request",
+					"method", r.Method,
+					"path", r.URL.Path,
+					"status", ww.Status(),
+					"duration_ms", time.Since(start).Milliseconds(),
+					"remote_addr", r.RemoteAddr,
+					"user_agent", r.UserAgent(),
+				)
+			}()
+			
+			next.ServeHTTP(ww, r)
+		})
+	}
+}
+{{end}}
+{{end}}

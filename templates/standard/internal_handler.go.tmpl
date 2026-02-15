@@ -1,0 +1,114 @@
+package handler
+
+import (
+{{if eq .Router "chi"}}
+	"encoding/json"
+	"net/http"
+{{else if eq .Router "gin"}}
+	"net/http"
+	"github.com/gin-gonic/gin"
+{{else if eq .Router "echo"}}
+	"net/http"
+	"github.com/labstack/echo/v4"
+{{else if eq .Router "fiber"}}
+	"github.com/gofiber/fiber/v2"
+{{else}}
+	"encoding/json"
+	"net/http"
+{{end}}
+)
+
+type Response struct {
+	Message string `json:"message"`
+	Status  string `json:"status"`
+}
+
+{{if eq .Router "chi"}}
+// Health returns the health status of the application
+func Health(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response{
+		Message: "Service is healthy",
+		Status:  "ok",
+	})
+}
+
+// Hello returns a hello message
+func Hello(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response{
+		Message: "Hello from {{.ProjectName}}!",
+		Status:  "ok",
+	})
+}
+{{else if eq .Router "gin"}}
+// Health returns the health status of the application
+func Health(c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
+		Message: "Service is healthy",
+		Status:  "ok",
+	})
+}
+
+// Hello returns a hello message
+func Hello(c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
+		Message: "Hello from {{.ProjectName}}!",
+		Status:  "ok",
+	})
+}
+{{else if eq .Router "echo"}}
+// Health returns the health status of the application
+func Health(c echo.Context) error {
+	return c.JSON(http.StatusOK, Response{
+		Message: "Service is healthy",
+		Status:  "ok",
+	})
+}
+
+// Hello returns a hello message
+func Hello(c echo.Context) error {
+	return c.JSON(http.StatusOK, Response{
+		Message: "Hello from {{.ProjectName}}!",
+		Status:  "ok",
+	})
+}
+{{else if eq .Router "fiber"}}
+// Health returns the health status of the application
+func Health(c *fiber.Ctx) error {
+	return c.JSON(Response{
+		Message: "Service is healthy",
+		Status:  "ok",
+	})
+}
+
+// Hello returns a hello message
+func Hello(c *fiber.Ctx) error {
+	return c.JSON(Response{
+		Message: "Hello from {{.ProjectName}}!",
+		Status:  "ok",
+	})
+}
+{{else}}
+// Health returns the health status of the application
+func Health(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response{
+		Message: "Service is healthy",
+		Status:  "ok",
+	})
+}
+
+// Hello returns a hello message
+func Hello(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response{
+		Message: "Hello from {{.ProjectName}}!",
+		Status:  "ok",
+	})
+}
+{{end}}

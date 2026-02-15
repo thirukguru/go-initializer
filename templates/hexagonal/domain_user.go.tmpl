@@ -1,0 +1,50 @@
+package domain
+
+import (
+	"errors"
+	"time"
+)
+
+// User represents the core business entity
+type User struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// Validation errors
+var (
+	ErrInvalidEmail = errors.New("invalid email address")
+	ErrEmptyName    = errors.New("name cannot be empty")
+	ErrUserNotFound = errors.New("user not found")
+)
+
+// NewUser creates a new User with validation
+func NewUser(email, name string) (*User, error) {
+	if email == "" {
+		return nil, ErrInvalidEmail
+	}
+	if name == "" {
+		return nil, ErrEmptyName
+	}
+
+	now := time.Now()
+	return &User{
+		Email:     email,
+		Name:      name,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, nil
+}
+
+// Update updates the user's information
+func (u *User) Update(name string) error {
+	if name == "" {
+		return ErrEmptyName
+	}
+	u.Name = name
+	u.UpdatedAt = time.Now()
+	return nil
+}

@@ -1,0 +1,104 @@
+package repository
+
+import (
+	"context"
+	"sync"
+	"{{.Module}}/internal/core/domain"
+	"{{.Module}}/internal/core/port"
+	"github.com/google/uuid"
+)
+
+// InMemoryUserRepository is an in-memory implementation of UserRepository
+// This is an ADAPTER - it adapts the domain port to a specific technology (in-memory storage)
+// In production, this would be replaced with PostgreSQL, MongoDB, etc.
+type InMemoryUserRepository struct {
+	mu    sync.RWMutex
+	users map[string]*domain.User
+}
+
+// NewUserRepository creates a new in-memory user repository
+func NewUserRepository() port.UserRepository {
+	return &InMemoryUserRepository{
+		users: make(map[string]*domain.User),
+	}
+}
+
+// Create stores a new user
+func (r *InMemoryUserRepository) Create(ctx context.Context, user *domain.User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Generate ID if not set
+	if user.ID == "" {
+		user.ID = uuid.New().String()
+	}
+
+	r.users[user.ID] = user
+	return nil
+}
+
+// GetByID retrieves a user by ID
+func (r *InMemoryUserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	user, exists := r.users[id]
+	if !exists {
+		return nil, domain.ErrUserNotFound
+	}
+
+	return user, nil
+}
+
+// GetByEmail retrieves a user by email
+func (r *InMemoryUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, user := range r.users {
+		if user.Email == email {
+			return user, nil
+		}
+	}
+
+	return nil, domain.ErrUserNotFound
+}
+
+// Update updates an existing user
+func (r *InMemoryUserRepository) Update(ctx context.Context, user *domain.User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.users[user.ID]; !exists {
+		return domain.ErrUserNotFound
+	}
+
+	r.users[user.ID] = user
+	return nil
+}
+
+// Delete removes a user
+func (r *InMemoryUserRepository) Delete(ctx context.Context, id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.users[id]; !exists {
+		return domain.ErrUserNotFound
+	}
+
+	delete(r.users, id)
+	return nil
+}
+
+// List retrieves all users
+func (r *InMemoryUserRepository) List(ctx context.Context) ([]*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	users := make([]*domain.User, 0, len(r.users))
+	for _, user := range r.users {
+		users = append(users, user)
+	}
+
+	return users, nil
+}

@@ -1,0 +1,168 @@
+package user
+
+import (
+{{if eq .Router "chi"}}
+	"encoding/json"
+	"net/http"
+	"github.com/go-chi/chi/v5"
+{{else if eq .Router "gin"}}
+	"net/http"
+	"github.com/gin-gonic/gin"
+{{else if eq .Router "echo"}}
+	"net/http"
+	"github.com/labstack/echo/v4"
+{{else}}
+	"encoding/json"
+	"net/http"
+{{end}}
+)
+
+type Handler struct {
+	service *Service
+}
+
+func NewHandler() *Handler {
+	return &Handler{
+		service: NewService(),
+	}
+}
+
+{{if eq .Router "chi"}}
+func (h *Handler) Routes() *chi.Mux {
+	r := chi.NewRouter()
+	r.Get("/", h.List)
+	r.Post("/", h.Create)
+	r.Get("/{id}", h.Get)
+	r.Put("/{id}", h.Update)
+	r.Delete("/{id}", h.Delete)
+	return r
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	users := h.service.List()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	user := h.service.Get(id)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	var user User
+	json.NewDecoder(r.Body).Decode(&user)
+	created := h.service.Create(user)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(created)
+}
+
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var user User
+	json.NewDecoder(r.Body).Decode(&user)
+	updated := h.service.Update(id, user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updated)
+}
+
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	h.service.Delete(id)
+	w.WriteHeader(http.StatusNoContent)
+}
+{{else if eq .Router "gin"}}
+func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	r.GET("", h.List)
+	r.POST("", h.Create)
+	r.GET("/:id", h.Get)
+	r.PUT("/:id", h.Update)
+	r.DELETE("/:id", h.Delete)
+}
+
+func (h *Handler) List(c *gin.Context) {
+	users := h.service.List()
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) Get(c *gin.Context) {
+	id := c.Param("id")
+	user := h.service.Get(id)
+	c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) Create(c *gin.Context) {
+	var user User
+	c.BindJSON(&user)
+	created := h.service.Create(user)
+	c.JSON(http.StatusCreated, created)
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var user User
+	c.BindJSON(&user)
+	updated := h.service.Update(id, user)
+	c.JSON(http.StatusOK, updated)
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	h.service.Delete(id)
+	c.Status(http.StatusNoContent)
+}
+{{else if eq .Router "echo"}}
+func (h *Handler) RegisterRoutes(g *echo.Group) {
+	g.GET("", h.List)
+	g.POST("", h.Create)
+	g.GET("/:id", h.Get)
+	g.PUT("/:id", h.Update)
+	g.DELETE("/:id", h.Delete)
+}
+
+func (h *Handler) List(c echo.Context) error {
+	users := h.service.List()
+	return c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) Get(c echo.Context) error {
+	id := c.Param("id")
+	user := h.service.Get(id)
+	return c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) Create(c echo.Context) error {
+	var user User
+	c.Bind(&user)
+	created := h.service.Create(user)
+	return c.JSON(http.StatusCreated, created)
+}
+
+func (h *Handler) Update(c echo.Context) error {
+	id := c.Param("id")
+	var user User
+	c.Bind(&user)
+	updated := h.service.Update(id, user)
+	return c.JSON(http.StatusOK, updated)
+}
+
+func (h *Handler) Delete(c echo.Context) error {
+	id := c.Param("id")
+	h.service.Delete(id)
+	return c.NoContent(http.StatusNoContent)
+}
+{{else}}
+func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/v1/users", h.List)
+	// Add more routes as needed
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	users := h.service.List()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+{{end}}

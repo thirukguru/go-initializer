@@ -1,0 +1,203 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+{{if eq .ProjectType "rest-api"}}
+    "{{.Module}}/internal/handler"
+    "{{.Module}}/internal/middleware"
+{{end}}
+{{if .UseConfig}}
+	"{{.Module}}/internal/config"
+{{end}}
+{{if .UseLogger}}
+	"{{.Module}}/pkg/logger"
+{{end}}
+{{if eq .Router "chi"}}
+	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
+{{else if eq .Router "gin"}}
+	"github.com/gin-gonic/gin"
+{{else if eq .Router "echo"}}
+	"github.com/labstack/echo/v4"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
+{{else if eq .Router "fiber"}}
+	"github.com/gofiber/fiber/v2"
+	fibermiddleware "github.com/gofiber/fiber/v2/middleware"
+{{end}}
+)
+
+func main() {
+{{if .UseLogger}}
+	// Initialize logger
+	log := logger.New()
+	log.Info("Starting {{.ProjectName}}...")
+{{else}}
+	log.Println("Starting {{.ProjectName}}...")
+{{end}}
+
+{{if .UseConfig}}
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal("Failed to load configuration:", err)
+	}
+{{end}}
+
+{{if eq .ProjectType "rest-api"}}
+	// Setup router
+{{if eq .Router "chi"}}
+	r := chi.NewRouter()
+	
+	// Middleware
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
+	r.Use(chimiddleware.RequestID)
+{{if .UseLogger}}
+	r.Use(middleware.Logger(log))
+{{end}}
+	
+	// Routes
+	r.Get("/health", handler.Health)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/hello", handler.Hello)
+	})
+	
+	// Start server
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+{{else if eq .Router "gin"}}
+	r := gin.Default()
+	
+	// Routes
+	r.GET("/health", handler.Health)
+	api := r.Group("/api/v1")
+	{
+		api.GET("/hello", handler.Hello)
+	}
+	
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+	}
+{{else if eq .Router "echo"}}
+	e := echo.New()
+	
+	// Middleware
+	e.Use(echomiddleware.Logger())
+	e.Use(echomiddleware.Recover())
+	
+	// Routes
+	e.GET("/health", handler.Health)
+	api := e.Group("/api/v1")
+	{
+		api.GET("/hello", handler.Hello)
+	}
+	
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      e,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+	}
+{{else if eq .Router "fiber"}}
+	app := fiber.New()
+	
+	// Middleware
+	app.Use(fibermiddleware.Logger())
+	app.Use(fibermiddleware.Recover())
+	
+	// Routes
+	app.Get("/health", handler.Health)
+	api := app.Group("/api/v1")
+	{
+		api.Get("/hello", handler.Hello)
+	}
+{{else}}
+	// Standard library HTTP server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", handler.Health)
+	mux.HandleFunc("/api/v1/hello", handler.Hello)
+	
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+{{end}}
+
+{{if .UseLogger}}
+	log.Info("Server starting on :8080")
+{{else}}
+	log.Println("Server starting on :8080")
+{{end}}
+
+{{if eq .Router "fiber"}}
+	// Fiber has its own graceful shutdown
+	go func() {
+		if err := app.Listen(":8080"); err != nil {
+			log.Fatal("Server failed to start:", err)
+		}
+	}()
+{{else}}
+	// Start server
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Server failed to start:", err)
+		}
+	}()
+{{end}}
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	
+{{if .UseLogger}}
+	log.Info("Shutting down server...")
+{{else}}
+	log.Println("Shutting down server...")
+{{end}}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+{{if eq .Router "fiber"}}
+	if err := app.ShutdownWithContext(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+{{else}}
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+{{end}}
+
+{{if .UseLogger}}
+	log.Info("Server exited")
+{{else}}
+	log.Println("Server exited")
+{{end}}
+{{else if eq .ProjectType "cli"}}
+	// CLI application
+	fmt.Println("Hello from {{.ProjectName}}!")
+	fmt.Println("This is a CLI application.")
+{{else if eq .ProjectType "grpc"}}
+	// gRPC server setup would go here
+	fmt.Println("gRPC server starting on :50051")
+{{end}}
+}

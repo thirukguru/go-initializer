@@ -1,0 +1,17 @@
+package port
+
+import (
+	"context"
+	"{{.Module}}/internal/core/domain"
+)
+
+// UserRepository defines the contract for user data operations
+// This is a PORT - it defines what the domain needs from the outside world
+type UserRepository interface {
+	Create(ctx context.Context, user *domain.User) error
+	GetByID(ctx context.Context, id string) (*domain.User, error)
+	GetByEmail(ctx context.Context, email string) (*domain.User, error)
+	Update(ctx context.Context, user *domain.User) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]*domain.User, error)
+}

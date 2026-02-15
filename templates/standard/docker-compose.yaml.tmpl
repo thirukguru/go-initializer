@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=development
+      - PORT=8080
+{{if .UseDatabase}}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME={{.ProjectName}}
+      - DB_SSLMODE=disable
+{{end}}
+{{if .UseLogger}}
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+{{end}}
+    depends_on:
+{{if .UseDatabase}}
+      - postgres
+{{end}}
+{{if .UseRedis}}
+      - redis
+{{end}}
+    networks:
+      - app-network
+
+{{if .UseDatabase}}
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB={{.ProjectName}}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+{{end}}
+
+{{if .UseRedis}}
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+{{end}}
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+{{if .UseDatabase}}
+  postgres-data:
+{{end}}

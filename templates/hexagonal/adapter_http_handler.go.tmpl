@@ -1,0 +1,470 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"{{.Module}}/internal/core/service"
+{{if eq .Router "chi"}}
+	"github.com/go-chi/chi/v5"
+{{else if eq .Router "gin"}}
+	"github.com/gin-gonic/gin"
+{{else if eq .Router "echo"}}
+	"github.com/labstack/echo/v4"
+{{end}}
+)
+
+// UserHandler is an HTTP adapter that translates HTTP requests to domain operations
+// This is an ADAPTER - it adapts HTTP to the domain
+type UserHandler struct {
+	service *service.UserService
+}
+
+// NewUserHandler creates a new UserHandler
+func NewUserHandler(service *service.UserService) *UserHandler {
+	return &UserHandler{
+		service: service,
+	}
+}
+
+// CreateUserRequest represents the HTTP request payload
+type CreateUserRequest struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+// UserResponse represents the HTTP response payload
+type UserResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+{{if eq .Router "chi"}}
+// Routes sets up the Chi routes for user operations
+func (h *UserHandler) Routes() *chi.Mux {
+	r := chi.NewRouter()
+	r.Post("/", h.Create)
+	r.Get("/", h.List)
+	r.Get("/{id}", h.Get)
+	r.Put("/{id}", h.Update)
+	r.Delete("/{id}", h.Delete)
+	return r
+}
+
+// Create handles user creation
+func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req CreateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.CreateUser(r.Context(), req.Email, req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+// Get handles retrieving a user by ID
+func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	
+	user, err := h.service.GetUser(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+// Update handles updating a user
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.UpdateUser(r.Context(), id, req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+// Delete handles deleting a user
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	
+	if err := h.service.DeleteUser(r.Context(), id); err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// List handles listing all users
+func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.ListUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := make([]UserResponse, len(users))
+	for i, user := range users {
+		response[i] = UserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+			Name:  user.Name,
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+{{else if eq .Router "gin"}}
+// RegisterRoutes sets up the Gin routes for user operations
+func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
+	r.POST("", h.Create)
+	r.GET("", h.List)
+	r.GET("/:id", h.Get)
+	r.PUT("/:id", h.Update)
+	r.DELETE("/:id", h.Delete)
+}
+
+func (h *UserHandler) Create(c *gin.Context) {
+	var req CreateUserRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	user, err := h.service.CreateUser(c.Request.Context(), req.Email, req.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Get(c *gin.Context) {
+	id := c.Param("id")
+	
+	user, err := h.service.GetUser(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	user, err := h.service.UpdateUser(c.Request.Context(), id, req.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	
+	if err := h.service.DeleteUser(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *UserHandler) List(c *gin.Context) {
+	users, err := h.service.ListUsers(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	response := make([]UserResponse, len(users))
+	for i, user := range users {
+		response[i] = UserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+			Name:  user.Name,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+{{else if eq .Router "echo"}}
+// RegisterRoutes sets up the Echo routes for user operations
+func (h *UserHandler) RegisterRoutes(g *echo.Group) {
+	g.POST("", h.Create)
+	g.GET("", h.List)
+	g.GET("/:id", h.Get)
+	g.PUT("/:id", h.Update)
+	g.DELETE("/:id", h.Delete)
+}
+
+func (h *UserHandler) Create(c echo.Context) error {
+	var req CreateUserRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+	}
+
+	user, err := h.service.CreateUser(c.Request().Context(), req.Email, req.Name)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Get(c echo.Context) error {
+	id := c.Param("id")
+	
+	user, err := h.service.GetUser(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Update(c echo.Context) error {
+	id := c.Param("id")
+	
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+	}
+
+	user, err := h.service.UpdateUser(c.Request().Context(), id, req.Name)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Delete(c echo.Context) error {
+	id := c.Param("id")
+	
+	if err := h.service.DeleteUser(c.Request().Context(), id); err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *UserHandler) List(c echo.Context) error {
+	users, err := h.service.ListUsers(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	response := make([]UserResponse, len(users))
+	for i, user := range users {
+		response[i] = UserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+			Name:  user.Name,
+		}
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+{{else}}
+// RegisterRoutes sets up standard library routes
+func (h *UserHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/v1/users", h.handleUsers)
+	mux.HandleFunc("/api/v1/users/", h.handleUserByID)
+}
+
+func (h *UserHandler) handleUsers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.Create(w, r)
+	case http.MethodGet:
+		h.List(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *UserHandler) handleUserByID(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		h.Get(w, r)
+	case http.MethodPut:
+		h.Update(w, r)
+	case http.MethodDelete:
+		h.Delete(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req CreateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.CreateUser(r.Context(), req.Email, req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
+	// Extract ID from path
+	id := r.URL.Path[len("/api/v1/users/"):]
+	
+	user, err := h.service.GetUser(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/api/v1/users/"):]
+	
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.UpdateUser(r.Context(), id, req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	})
+}
+
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/api/v1/users/"):]
+	
+	if err := h.service.DeleteUser(r.Context(), id); err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.ListUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := make([]UserResponse, len(users))
+	for i, user := range users {
+		response[i] = UserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+			Name:  user.Name,
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+{{end}}

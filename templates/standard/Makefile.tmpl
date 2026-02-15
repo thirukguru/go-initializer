@@ -1,0 +1,76 @@
+.PHONY: help build run test clean lint docker-build docker-run
+
+# Variables
+APP_NAME={{.ProjectName}}
+GO_VERSION={{.GoVersion}}
+MAIN_PATH=cmd/$(APP_NAME)/main.go
+BINARY_NAME=$(APP_NAME)
+
+help: ## Display this help screen
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+build: ## Build the application
+	@echo "Building $(APP_NAME)..."
+	@go build -o bin/$(BINARY_NAME) $(MAIN_PATH)
+
+run: ## Run the application
+	@echo "Running $(APP_NAME)..."
+	@go run $(MAIN_PATH)
+
+test: ## Run tests
+	@echo "Running tests..."
+	@go test -v -race -coverprofile=coverage.out ./...
+
+test-coverage: test ## Run tests with coverage report
+	@go tool cover -html=coverage.out
+
+clean: ## Clean build artifacts
+	@echo "Cleaning..."
+	@rm -rf bin/
+	@rm -f coverage.out
+
+lint: ## Run linter
+	@echo "Running linter..."
+	@golangci-lint run ./...
+
+fmt: ## Format code
+	@echo "Formatting code..."
+	@go fmt ./...
+
+vet: ## Run go vet
+	@echo "Running go vet..."
+	@go vet ./...
+
+tidy: ## Tidy go modules
+	@echo "Tidying go modules..."
+	@go mod tidy
+
+docker-build: ## Build docker image
+	@echo "Building Docker image..."
+	@docker build -t $(APP_NAME):latest .
+
+docker-run: ## Run docker container
+	@echo "Running Docker container..."
+	@docker run -p 8080:8080 --env-file .env $(APP_NAME):latest
+
+docker-compose-up: ## Start services with docker-compose
+	@echo "Starting services..."
+	@docker-compose up -d
+
+docker-compose-down: ## Stop services with docker-compose
+	@echo "Stopping services..."
+	@docker-compose down
+
+install-tools: ## Install development tools
+	@echo "Installing tools..."
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+{{if .UseAir}}
+	@go install github.com/cosmtrek/air@latest
+{{end}}
+
+{{if .UseAir}}
+dev: ## Run with hot reload
+	@air
+{{end}}
+
+.DEFAULT_GOAL := help

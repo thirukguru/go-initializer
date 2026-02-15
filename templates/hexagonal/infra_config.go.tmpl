@@ -1,0 +1,24 @@
+package config
+
+import "os"
+
+// Config holds application configuration
+type Config struct {
+	Port        string
+	Environment string
+}
+
+// Load loads configuration from environment variables
+func Load() *Config {
+	return &Config{
+		Port:        getEnv("PORT", "8080"),
+		Environment: getEnv("ENVIRONMENT", "development"),
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}

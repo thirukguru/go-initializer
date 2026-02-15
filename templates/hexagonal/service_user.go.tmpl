@@ -1,0 +1,84 @@
+package service
+
+import (
+	"context"
+	"{{.Module}}/internal/core/domain"
+	"{{.Module}}/internal/core/port"
+)
+
+// UserService implements the business logic for user operations
+// This is part of the CORE - it contains the business rules
+type UserService struct {
+	repo port.UserRepository
+}
+
+// NewUserService creates a new UserService
+func NewUserService(repo port.UserRepository) *UserService {
+	return &UserService{
+		repo: repo,
+	}
+}
+
+// CreateUser creates a new user with business logic validation
+func (s *UserService) CreateUser(ctx context.Context, email, name string) (*domain.User, error) {
+	// Business rule: Check if user with email already exists
+	existing, err := s.repo.GetByEmail(ctx, email)
+	if err == nil && existing != nil {
+		return nil, domain.ErrInvalidEmail // User already exists
+	}
+
+	// Create user entity (this validates the data)
+	user, err := domain.NewUser(email, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Persist the user
+	if err := s.repo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// GetUser retrieves a user by ID
+func (s *UserService) GetUser(ctx context.Context, id string) (*domain.User, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+// UpdateUser updates a user's information
+func (s *UserService) UpdateUser(ctx context.Context, id, name string) (*domain.User, error) {
+	// Retrieve existing user
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply business logic for update
+	if err := user.Update(name); err != nil {
+		return nil, err
+	}
+
+	// Persist changes
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// DeleteUser removes a user
+func (s *UserService) DeleteUser(ctx context.Context, id string) error {
+	// Business rule: Verify user exists before deleting
+	_, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.Delete(ctx, id)
+}
+
+// ListUsers retrieves all users
+func (s *UserService) ListUsers(ctx context.Context) ([]*domain.User, error) {
+	return s.repo.List(ctx)
+}

@@ -1,0 +1,34 @@
+package user
+
+type Service struct {
+	repo *Repository
+}
+
+func NewService() *Service {
+	return &Service{
+		repo: NewRepository(),
+	}
+}
+
+func (s *Service) List() []User {
+	return s.repo.FindAll()
+}
+
+func (s *Service) Get(id string) User {
+	return s.repo.FindByID(id)
+}
+
+func (s *Service) Create(user User) User {
+	// Add business logic here
+	return s.repo.Create(user)
+}
+
+func (s *Service) Update(id string, user User) User {
+	// Add business logic here
+	user.ID = id
+	return s.repo.Update(user)
+}
+
+func (s *Service) Delete(id string) {
+	s.repo.Delete(id)
+}

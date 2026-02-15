@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Initializr</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .radio-group input[type="radio"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .radio-group input[type="radio"]:checked {
+            border-color: #10b981;
+        }
+        .radio-group input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <svg class="w-10 h-10 text-cyan-500" viewBox="0 0 207 207" fill="currentColor">
+                        <path d="M15.81 138.65c0 11.88 9.63 21.51 21.51 21.51h63.56v-43.03H37.32c-11.88 0-21.51 9.63-21.51 21.52zm74.89-43.03h-.33v-43.03c0-11.88-9.63-21.51-21.51-21.51H15.81c0 11.88 9.63 21.51 21.51 21.51h53.38z"/>
+                        <path d="M154.71 95.62h-63.9v43.03h63.9c11.88 0 21.51-9.63 21.51-21.51 0-11.89-9.63-21.52-21.51-21.52zm0-64.54c-11.88 0-21.51 9.63-21.51 21.51v.33h-.33v43.03h21.84c11.88 0 21.51-9.63 21.51-21.51V31.08z"/>
+                    </svg>
+                    <h1 class="ml-3 text-2xl font-semibold text-gray-900">go initializr</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-4xl mx-auto">
+            
+            <!-- Project Metadata -->
+            <section class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">Project Metadata</h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Module</label>
+                            <input 
+                                id="module-input"
+                                type="text" 
+                                value="github.com/yourname/demo" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                            <input 
+                                id="name-input"
+                                type="text" 
+                                value="demo" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <input 
+                            id="description-input"
+                            type="text" 
+                            value="Demo project for Go" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        >
+                    </div>
+                </div>
+            </section>
+
+            <!-- Go Version -->
+            <section class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Go Version</h2>
+                <div class="radio-group grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="go-version" value="1.23" class="mr-2">
+                        <span class="text-gray-700">1.23</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="go-version" value="1.22" checked class="mr-2">
+                        <span class="text-gray-700">1.22</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="go-version" value="1.21" class="mr-2">
+                        <span class="text-gray-700">1.21</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="go-version" value="1.20" class="mr-2">
+                        <span class="text-gray-700">1.20</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Project Structure -->
+            <section class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Project Structure</h2>
+                <div class="radio-group space-y-3">
+                    <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50">
+                        <input type="radio" name="structure" value="standard" checked class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Standard Layout</div>
+                            <div class="text-sm text-gray-600 mt-1">Recommended. Uses cmd/, internal/, pkg/</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50">
+                        <input type="radio" name="structure" value="flat" class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Flat/Simple</div>
+                            <div class="text-sm text-gray-600 mt-1">All code in root. Best for small projects</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-start cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-cyan-500 hover:bg-cyan-50">
+                        <input type="radio" name="structure" value="feature" class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Feature-Based</div>
+                            <div class="text-sm text-gray-600 mt-1">Organize by business domain</div>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Project Type -->
+            <section class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Project Type</h2>
+                <div class="radio-group flex flex-wrap gap-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="project-type" value="rest-api" checked class="mr-2">
+                        <span class="text-gray-700">REST API</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="project-type" value="cli" class="mr-2">
+                        <span class="text-gray-700">CLI Tool</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="project-type" value="grpc" class="mr-2">
+                        <span class="text-gray-700">gRPC Service</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="project-type" value="library" class="mr-2">
+                        <span class="text-gray-700">Library</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Generate Button -->
+            <div class="flex justify-end">
+                <button id="generate-btn" class="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold shadow-lg">
+                    GENERATE
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Handle Generate button click
+        const generateBtn = document.getElementById('generate-btn');
+        
+        generateBtn.onclick = async function() {
+            try {
+                // Show loading state
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'GENERATING...';
+                generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                
+                // Get form values
+                const projectName = document.getElementById('name-input').value;
+                const module = document.getElementById('module-input').value;
+                const description = document.getElementById('description-input').value;
+                const goVersion = document.querySelector('input[name="go-version"]:checked')?.value || '1.22';
+                const structure = document.querySelector('input[name="structure"]:checked')?.value || 'standard';
+                const projectType = document.querySelector('input[name="project-type"]:checked')?.value || 'rest-api';
+                
+                // Validate
+                if (!projectName || !module) {
+                    alert('Please fill in project name and module');
+                    return;
+                }
+                
+                const config = {
+                    project_name: projectName,
+                    module: module,
+                    description: description,
+                    go_version: goVersion,
+                    structure: structure,
+                    project_type: projectType,
+                    router: 'chi',
+                    logger: '',
+                    use_docker: false,
+                    use_github: false,
+                    use_config: true,
+                    use_logger: false,
+                    use_database: false,
+                    use_redis: false,
+                    use_jwt: false,
+                    use_air: false,
+                    dependencies: []
+                };
+
+                console.log('Generating project with config:', config);
+
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Generation failed: ' + response.status);
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = config.project_name + '.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                console.log('✅ Download complete!');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate project: ' + error.message);
+            } finally {
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'GENERATE';
+                generateBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+package logger
+
+import (
+{{if eq .Logger "zerolog"}}
+	"os"
+	"github.com/rs/zerolog"
+{{else if eq .Logger "zap"}}
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+{{else if eq .Logger "slog"}}
+	"log/slog"
+	"os"
+{{else}}
+	"log"
+	"os"
+{{end}}
+)
+
+{{if eq .Logger "zerolog"}}
+type Logger struct {
+	logger zerolog.Logger
+}
+
+func New() *Logger {
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	return &Logger{logger: logger}
+}
+
+func (l *Logger) Info(msg string, fields ...interface{}) {
+	event := l.logger.Info()
+	for i := 0; i < len(fields); i += 2 {
+		if i+1 < len(fields) {
+			key := fields[i].(string)
+			value := fields[i+1]
+			event = event.Interface(key, value)
+		}
+	}
+	event.Msg(msg)
+}
+
+func (l *Logger) Error(msg string, fields ...interface{}) {
+	event := l.logger.Error()
+	for i := 0; i < len(fields); i += 2 {
+		if i+1 < len(fields) {
+			key := fields[i].(string)
+			value := fields[i+1]
+			event = event.Interface(key, value)
+		}
+	}
+	event.Msg(msg)
+}
+
+func (l *Logger) Debug(msg string, fields ...interface{}) {
+	event := l.logger.Debug()
+	for i := 0; i < len(fields); i += 2 {
+		if i+1 < len(fields) {
+			key := fields[i].(string)
+			value := fields[i+1]
+			event = event.Interface(key, value)
+		}
+	}
+	event.Msg(msg)
+}
+
+func (l *Logger) Fatal(msg string, fields ...interface{}) {
+	event := l.logger.Fatal()
+	for i := 0; i < len(fields); i += 2 {
+		if i+1 < len(fields) {
+			key := fields[i].(string)
+			value := fields[i+1]
+			event = event.Interface(key, value)
+		}
+	}
+	event.Msg(msg)
+}
+{{else if eq .Logger "zap"}}
+type Logger struct {
+	logger *zap.Logger
+}
+
+func New() *Logger {
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.TimeKey = "timestamp"
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	
+	logger, _ := config.Build()
+	return &Logger{logger: logger}
+}
+
+func (l *Logger) Info(msg string, fields ...interface{}) {
+	l.logger.Info(msg, convertToZapFields(fields...)...)
+}
+
+func (l *Logger) Error(msg string, fields ...interface{}) {
+	l.logger.Error(msg, convertToZapFields(fields...)...)
+}
+
+func (l *Logger) Debug(msg string, fields ...interface{}) {
+	l.logger.Debug(msg, convertToZapFields(fields...)...)
+}
+
+func (l *Logger) Fatal(msg string, fields ...interface{}) {
+	l.logger.Fatal(msg, convertToZapFields(fields...)...)
+}
+
+func convertToZapFields(fields ...interface{}) []zap.Field {
+	zapFields := make([]zap.Field, 0, len(fields)/2)
+	for i := 0; i < len(fields); i += 2 {
+		if i+1 < len(fields) {
+			key := fields[i].(string)
+			value := fields[i+1]
+			zapFields = append(zapFields, zap.Any(key, value))
+		}
+	}
+	return zapFields
+}
+{{else if eq .Logger "slog"}}
+type Logger struct {
+	logger *slog.Logger
+}
+
+func New() *Logger {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	return &Logger{logger: logger}
+}
+
+func (l *Logger) Info(msg string, fields ...interface{}) {
+	l.logger.Info(msg, fields...)
+}
+
+func (l *Logger) Error(msg string, fields ...interface{}) {
+	l.logger.Error(msg, fields...)
+}
+
+func (l *Logger) Debug(msg string, fields ...interface{}) {
+	l.logger.Debug(msg, fields...)
+}
+
+func (l *Logger) Fatal(msg string, fields ...interface{}) {
+	l.logger.Error(msg, fields...)
+	os.Exit(1)
+}
+{{else}}
+type Logger struct {
+	logger *log.Logger
+}
+
+func New() *Logger {
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+	return &Logger{logger: logger}
+}
+
+func (l *Logger) Info(msg string, fields ...interface{}) {
+	l.logger.Println("[INFO]", msg, fields)
+}
+
+func (l *Logger) Error(msg string, fields ...interface{}) {
+	l.logger.Println("[ERROR]", msg, fields)
+}
+
+func (l *Logger) Debug(msg string, fields ...interface{}) {
+	l.logger.Println("[DEBUG]", msg, fields)
+}
+
+func (l *Logger) Fatal(msg string, fields ...interface{}) {
+	l.logger.Fatal("[FATAL]", msg, fields)
+}
+{{end}}
