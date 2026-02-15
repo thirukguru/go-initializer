@@ -35,3 +35,5 @@ tmp/
 
 # Log files
 *.log
+
+*.backup
